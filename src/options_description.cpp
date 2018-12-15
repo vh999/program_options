@@ -237,8 +237,8 @@ namespace boost { namespace program_options {
         {
             return m_long_names.empty()
                 ? m_short_name 
-                : string(m_short_name).append(" [ --").
-                  append(*m_long_names.begin()).append(" ]");
+                : string(m_short_name).append(", --").
+                  append(*m_long_names.begin()).append(" ");
         }
         return string("--").append(*m_long_names.begin());
     }
