@@ -169,6 +169,31 @@ namespace boost { namespace program_options {
         v = boost::any(boost::optional<T>(boost::any_cast<T>(a)));
     }
 
+	// Helper function to copy a non-vector implicit value into the
+	// tokens vector.
+	template<class T, class charT>
+	void get_implicit_tokens(std::vector<std::basic_string<charT> >& vs,
+                             const boost::any& a,
+                             T*, long) 
+	{
+        const T va = boost::any_cast<const T>(a);
+        vs.push_back(boost::lexical_cast<std::basic_string<charT> >(va));
+    }
+
+    // Helper function to copy a vector implicit value into the
+    // tokens vector.
+    template<class T, class charT>
+    void get_implicit_tokens(std::vector<std::basic_string<charT> >& vs,
+                             const boost::any& a,
+                             std::vector<T>*, int) 
+	{
+        const std::vector<T> va = boost::any_cast<const std::vector<T> >(a);
+        for (unsigned i = 0; i < va.size(); i++) 
+		{
+            vs.push_back(boost::lexical_cast<std::basic_string<charT> >(va[i]));
+        }
+    }
+
     template<class T, class charT>
     void 
     typed_value<T, charT>::
@@ -178,11 +203,24 @@ namespace boost { namespace program_options {
         // If no tokens were given, and the option accepts an implicit
         // value, then assign the implicit value as the stored value;
         // otherwise, validate the user-provided token(s).
-        if (new_tokens.empty() && !m_implicit_value.empty())
-            value_store = m_implicit_value;
+
+		if (new_tokens.empty() && !m_implicit_value.empty())
+		{
+            if (m_composing) 
+			{
+                // Attempt to append the implicit value.
+                std::vector<std::basic_string<charT> > vs;
+                get_implicit_tokens(vs, m_implicit_value, (T*)0, 0);
+                validate(value_store, vs, (T*)0, 0);
+            } 
+			else 
+			{
+                value_store = m_implicit_value;
+            }
+		}
         else
-            validate(value_store, new_tokens, (T*)0, 0);
-    }
+			validate(value_store, new_tokens, (T*)0, 0);
+     }
 
     template<class T>
     typed_value<T>*
