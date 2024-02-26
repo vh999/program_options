@@ -205,7 +205,7 @@ namespace boost { namespace program_options { namespace detail {
     }
 
     vector<option>
-    cmdline::run()
+    cmdline::run(const std::vector<option>& options)
     {
         // The parsing is done by having a set of 'style parsers'
         // and trying then in order. Each parser is passed a vector
@@ -247,7 +247,7 @@ namespace boost { namespace program_options { namespace detail {
 
         style_parsers.push_back(boost::bind(&cmdline::parse_terminator, this, _1));
 
-        vector<option> result;
+        vector<option> result(options);
         vector<string>& args = m_args;
         while(!args.empty())
         {
@@ -432,7 +432,7 @@ namespace boost { namespace program_options { namespace detail {
             const option_description& d = *xd;
 
             // Canonize the name
-            opt.string_key = d.key(opt.string_key);
+            opt.string_key = d.key();
 
             // We check that the min/max number of tokens for the option
             // agrees with the number of tokens we have. The 'adjacent_value'
@@ -692,6 +692,7 @@ namespace boost { namespace program_options { namespace detail {
         if (!r.first.empty()) {
             option next;
             next.string_key = r.first;
+            next.original_tokens.push_back(args.front());
             if (!r.second.empty())
                 next.value.push_back(r.second);
             result.push_back(next);

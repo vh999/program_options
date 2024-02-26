@@ -406,20 +406,23 @@ namespace boost { namespace program_options {
         switch(kind)
         {
         case invalid_bool_value:
-            msg = "the argument ('%value%') for option '%canonical_option%' is invalid. Valid choices are 'on|off', 'yes|no', '1|0' and 'true|false'";
+            msg = "the argument ('%value%') for option '%original_token%' is invalid. Valid choices are 'on|off', 'yes|no', '1|0' and 'true|false'";
             break;
         case invalid_option_value:
-            msg = "the argument ('%value%') for option '%canonical_option%' is invalid";
+            msg = "the argument ('%value%') for option '%original_token%' is invalid";
             break;
         case multiple_values_not_allowed:
-            msg = "option '%canonical_option%' only takes a single argument";
+            msg = "option '%original_token%' only takes a single argument";
             break;
         case at_least_one_value_required:
-            msg = "option '%canonical_option%' requires at least one argument";
+            msg = "option '%original_token%' requires at least one argument";
             break;
         // currently unused
+         case no_value_required:
+            msg = "option '%original_token%' requires no argument";
+            break;
         case invalid_option:
-            msg = "option '%canonical_option%' is not valid";
+            msg = "option '%original_token%' is not valid";
             break;
         default:
             msg = "unknown error";

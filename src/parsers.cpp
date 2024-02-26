@@ -112,6 +112,7 @@ namespace boost { namespace program_options {
         {
             const option_description& d = *options[i];
 
+            //TODO: should the throw be removed?
             if (d.long_name().empty())
                 boost::throw_exception(
                     error("abbreviated option names are not permitted in options configuration files"));

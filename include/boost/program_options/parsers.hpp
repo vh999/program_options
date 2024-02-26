@@ -36,6 +36,7 @@ namespace boost { namespace program_options {
     template<class charT>
     class basic_parsed_options {
     public:
+        basic_parsed_options(){}
         explicit basic_parsed_options(const options_description* xdescription, int options_prefix = 0)
         : description(xdescription), m_options_prefix(options_prefix) {}
         /** Options found in the source. */
@@ -139,6 +140,7 @@ namespace boost { namespace program_options {
             Throws on error.
         */
         basic_parsed_options<charT> run();
+        basic_parsed_options<charT> run(const std::vector<boost::program_options::option>&);
 
         /** Specifies that unregistered options are allowed and should
             be passed though. For each command like token that looks

@@ -68,10 +68,12 @@ namespace boost { namespace program_options {
                 if (xm.m_final.count(option_name))
                     continue;
 
-                original_token = options.options[i].original_tokens.size() ?
-                                        options.options[i].original_tokens[0]     : "";
-                const option_description& d = desc.find(option_name, false,
-                                                        false, false);
+                original_token = 
+                    options.options[i].original_tokens.size() ?
+                    options.options[i].original_tokens[0]     : "";
+
+                const option_description& d = 
+                    desc.find(option_name, false, false, false);
 
                 variable_value& v = m[option_name];
                 if (v.defaulted()) {
@@ -106,10 +108,11 @@ namespace boost { namespace program_options {
 
         // Second, apply default values and store required options.
         const vector<shared_ptr<option_description> >& all = desc.options();
+
         for(i = 0; i < all.size(); ++i)
         {
             const option_description& d = *all[i];
-            string key = d.key("");
+            string key = d.key();
             // FIXME: this logic relies on knowledge of option_description
             // internals.
             // The 'key' is empty if options description contains '*'.
@@ -136,6 +139,7 @@ namespace boost { namespace program_options {
                 //  "--"  >  ("-" or "/")  >  ""
                 //  Precedence is set conveniently by a single call to length()
                 string canonical_name = d.canonical_display_name(options.m_options_prefix);
+
                 if (canonical_name.length() > xm.m_required[key].length())
                     xm.m_required[key] = canonical_name;
             }
@@ -152,6 +156,11 @@ namespace boost { namespace program_options {
     void notify(variables_map& vm)
     {
         vm.notify();
+    }
+
+    BOOST_PROGRAM_OPTIONS_DECL std::string text(variables_map &vm, const std::string& s)
+    {
+        return vm.text(s);
     }
 
     abstract_variables_map::abstract_variables_map()
@@ -246,4 +255,17 @@ namespace boost { namespace program_options {
         }
     }
 
+    std::string
+    variables_map::text(const std::string &s)
+    {
+        for(map<string,variable_value>::const_iterator k = begin();
+            k != end();
+            ++k)
+            {
+                if(k->first == s) 
+                    return k->second.m_value_semantic->text(k->second.value());
+            }
+
+        return string();
+    }
 }}

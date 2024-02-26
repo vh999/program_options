@@ -84,6 +84,19 @@ namespace boost { namespace program_options {
 
         /** Returns the contained value. */
         boost::any& value();
+
+        /// return the value in text
+        std::string text() const
+        {
+            return m_value_semantic->text(v);
+        }
+
+        /// notify of value
+
+        void notify() const
+        {
+            m_value_semantic->notify(v);
+        }
     private:
         boost::any v;
         bool m_defaulted;
@@ -158,6 +171,7 @@ namespace boost { namespace program_options {
         void clear();
 
         void notify();
+        std::string text(const std::string &);
 
     private:
         /** Implementation of abstract_variables_map::get

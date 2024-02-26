@@ -52,7 +52,7 @@ namespace boost { namespace program_options {
     option_description::
     option_description(const char* names,
                        const value_semantic* s)
-    : m_value_semantic(s)
+    : m_value_semantic(s), m_positionals(0), m_supported(true)
     {
         this->set_names(names);
     }
@@ -62,7 +62,7 @@ namespace boost { namespace program_options {
     option_description(const char* names,
                        const value_semantic* s,
                        const char* description)
-    : m_description(description), m_value_semantic(s)
+    : m_description(description), m_value_semantic(s), m_positionals(0),m_supported(true)
     {
         this->set_names(names);
     }
@@ -125,6 +125,7 @@ namespace boost { namespace program_options {
         return result;        
     }
 
+#if 0
     const std::string& 
     option_description::key(const std::string& option) const
     {
@@ -144,6 +145,19 @@ namespace boost { namespace program_options {
         }
         else
             return m_short_name;
+    }
+#endif
+
+    const std::string& 
+    option_description::key(void) const
+    {
+        /*
+        key() should always be referenced to the option's first longname,
+        or its switch name.
+        */
+        if (m_long_names.empty()) return m_short_name;
+        
+        return m_long_names.front();
     }
 
     std::string 
@@ -171,12 +185,29 @@ namespace boost { namespace program_options {
             return m_short_name;
     }
 
+    const std::string
+    option_description::canonical_name(void) const
+    {
+        if(m_long_names.empty())
+            if(m_short_name.empty())
+                boost::throw_exception(error("option must have a valid name"));
+            else
+                return m_short_name;
+        else
+            return *m_long_names.begin();
+    }
 
     const std::string&
     option_description::long_name() const
     {
         static std::string empty_string("");
         return m_long_names.empty() ? empty_string : *m_long_names.begin();
+    }
+
+    const std::string&
+        option_description::short_name() const
+    {
+        return m_short_name;
     }
 
     const std::pair<const std::string*, std::size_t>
@@ -234,12 +265,12 @@ namespace boost { namespace program_options {
     std::string 
     option_description::format_name() const
     {
-        if (!m_short_name.empty())
-        {
+       if (!m_short_name.empty())
+       {
             return m_long_names.empty()
-                ? m_short_name 
-                : string(m_short_name).append(" [ --").
-                  append(*m_long_names.begin()).append(" ]");
+                ? m_short_name
+                : string(m_short_name).append(" --").
+                append(*m_long_names.begin());
         }
         return string("--").append(*m_long_names.begin());
     }
@@ -344,13 +375,13 @@ namespace boost { namespace program_options {
         return options_description_easy_init(this);
     }
 
-    const option_description&
+    option_description&
     options_description::find(const std::string& name, 
                               bool approx,
                               bool long_ignore_case,
                               bool short_ignore_case) const
     {
-        const option_description* d = find_nothrow(name, approx, 
+         option_description* d = find_nothrow(name, approx, 
                                        long_ignore_case, short_ignore_case);
         if (!d)
             boost::throw_exception(unknown_option());
@@ -363,7 +394,7 @@ namespace boost { namespace program_options {
         return m_options;
     }
 
-    const option_description*
+    option_description*
     options_description::find_nothrow(const std::string& name, 
                                       bool approx,
                                       bool long_ignore_case,
@@ -387,7 +418,7 @@ namespace boost { namespace program_options {
 
             if (r == option_description::full_match)
             {                
-                full_matches.push_back(m_options[i]->key(name));
+                full_matches.push_back(m_options[i]->key());
                 found = m_options[i];
                 had_full_match = true;
             } 
@@ -395,7 +426,7 @@ namespace boost { namespace program_options {
             {                        
                 // FIXME: the use of 'key' here might not
                 // be the best approach.
-                approximate_matches.push_back(m_options[i]->key(name));
+                approximate_matches.push_back(m_options[i]->key());
                 if (!had_full_match)
                     found = m_options[i];
             }
@@ -412,6 +443,19 @@ namespace boost { namespace program_options {
             boost::throw_exception(ambiguous_option(approximate_matches));
 
         return found.get();
+    }
+    void options_description::declare_option(const string &os, const vector<string> &vs, unsigned line)
+    {
+		boost::any s;
+
+		auto optionGate = find(os,false);
+        auto valueCount = optionGate.semantic()->max_tokens();
+
+        if(valueCount == 0 && !vs.empty()) 
+            boost::throw_exception( validation_error(validation_error::no_value_required,os));
+
+		optionGate.semantic()->parse(s, vs, true);
+		optionGate.semantic()->notify(s);
     }
 
     BOOST_PROGRAM_OPTIONS_DECL
@@ -613,7 +657,10 @@ namespace boost { namespace program_options {
                         unsigned first_column_width, unsigned line_length)
         {
             stringstream ss;
-            ss << "  " << opt.format_name() << ' ' << opt.format_parameter();
+            if(opt.is_positional())
+                ss << "  " << opt.semantic()->name();
+            else
+                ss << "  " << opt.format_name() << ' ' << opt.format_parameter();
             
             // Don't use ss.rdbuf() since g++ 2.96 is buggy on it.
             os << ss.str();
@@ -684,7 +731,7 @@ namespace boost { namespace program_options {
             if (belong_to_group[i])
                 continue;
 
-            const option_description& opt = *m_options[i];
+            option_description& opt = *m_options[i];
 
             format_one(os, opt, width, m_line_length);
 
@@ -696,5 +743,40 @@ namespace boost { namespace program_options {
             groups[j]->print(os, width);
         }
     }
+    void 
+    options_description::print_options(std::ostream& os, bool displayAll, unsigned width) const
+    {
+        if (!m_caption.empty())
+            os << m_caption << ":\n";
 
+        if (!width)
+            width = get_option_column_width();
+
+        /* The options formatting style is stolen from Subversion. */
+        for (unsigned i = 0; i < m_options.size(); ++i)
+        {
+            if (belong_to_group[i])
+                continue;
+
+            option_description& opt = *m_options[i];
+
+            /*
+            Skip all positionals.
+            Skip unsupported options if not displayAll.
+            */
+            if(opt.is_positional())continue;
+
+            if(!displayAll && !opt.is_supported())
+                continue;
+
+            format_one(os, opt, width, m_line_length);
+
+            os << "\n";
+        }
+
+        for (unsigned j = 0; j < groups.size(); ++j) {            
+            os << "\n";
+            groups[j]->print_options(os, displayAll, width);
+        }
+    }
 }}

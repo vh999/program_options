@@ -100,6 +100,7 @@ namespace boost { namespace program_options { namespace detail {
             const positional_options_description& m_positional);
 
         std::vector<option> run();
+        std::vector<option> run(const std::vector<option>&);
 
         std::vector<option> parse_long_option(std::vector<std::string>& args);
         std::vector<option> parse_short_option(std::vector<std::string>& args);

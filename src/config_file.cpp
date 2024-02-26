@@ -100,7 +100,8 @@ namespace boost { namespace program_options { namespace detail {
                     if (*m_prefix.rbegin() != '.')
                         m_prefix += '.';
                 }
-                else if ((n = s.find('=')) != string::npos) {
+                else 
+                if ((n = s.find('=')) != string::npos) {
 
                     string name = m_prefix + trim_ws(s.substr(0, n));
                     string value = trim_ws(s.substr(n+1));
@@ -119,7 +120,32 @@ namespace boost { namespace program_options { namespace detail {
                     this->value().original_tokens.push_back(value);
                     break;
 
-                } else {
+                } 
+                else 
+                if (n = s.find('\n')) {
+
+                    string name = m_prefix + trim_ws(s.substr(0, n));
+                    //string value = trim_ws(s.substr(n+1));
+
+                    string value = "true";
+
+                    bool registered = allowed_option(name);
+                    if (!registered && !m_allow_unregistered)
+                        boost::throw_exception(unknown_option(name));
+
+                    found = true;
+                    this->value().string_key = name;
+                    this->value().value.clear();
+                    this->value().value.push_back(value);
+                    this->value().unregistered = !registered;
+                    this->value().original_tokens.clear();
+                    this->value().original_tokens.push_back(name);
+                    this->value().original_tokens.push_back(value);
+                    break;
+
+                } 
+                else
+                {
                     boost::throw_exception(invalid_config_file_syntax(s, invalid_syntax::unrecognized_line));
                 }
             }

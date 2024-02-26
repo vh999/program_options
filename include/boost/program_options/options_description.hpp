@@ -101,7 +101,8 @@ namespace program_options {
             If long name was specified, it's the long name, otherwise
             it's a short name with prepended '-'.
         */
-        const std::string& key(const std::string& option) const;
+        //const std::string& key(const std::string& option) const;
+        const std::string& key(void) const;
 
 
         /** Returns the canonical name for the option description to enable the user to
@@ -113,7 +114,10 @@ namespace program_options {
         */
         std::string canonical_display_name(int canonical_option_style = 0) const;
 
+        const std::string canonical_name(void) const;
+
         const std::string& long_name() const;
+        const std::string& short_name() const;
 
         const std::pair<const std::string*, std::size_t> long_names() const;
 
@@ -130,6 +134,27 @@ namespace program_options {
             usage message. */
         std::string format_parameter() const;
 
+        bool is_positional() const
+        {
+            return m_positionals!=0;
+        }
+        void set_positionals(unsigned numberOfTokens) 
+        {
+            m_positionals = numberOfTokens;
+        }
+        unsigned get_positionals(void) 
+        {
+            return m_positionals;
+        }
+
+        bool is_supported() 
+        {
+            return m_supported;
+        }
+        void set_supported(bool supported = true)
+        {
+            m_supported = supported;
+        }
     private:
     
         option_description& set_names(const char* name);
@@ -153,7 +178,10 @@ namespace program_options {
         // shared_ptr is needed to simplify memory management in
         // copy ctor and destructor.
         shared_ptr<const value_semantic> m_value_semantic;
-    };
+
+        unsigned m_positionals;
+        bool m_supported;
+     };
 
     class options_description;
 
@@ -230,12 +258,12 @@ namespace program_options {
         */
         options_description_easy_init add_options();
 
-        const option_description& find(const std::string& name, 
+        option_description& find(const std::string& name, 
                                        bool approx, 
                                        bool long_ignore_case = false,
                                        bool short_ignore_case = false) const;
 
-        const option_description* find_nothrow(const std::string& name, 
+        option_description* find_nothrow(const std::string& name, 
                                                bool approx,
                                                bool long_ignore_case = false,
                                                bool short_ignore_case = false) const;
@@ -253,6 +281,9 @@ namespace program_options {
             option_description element. */
         void print(std::ostream& os, unsigned width = 0) const;
 
+        void print_options(std::ostream& os,bool displayAll = false, unsigned width = 0) const;
+
+        void declare_option(const std::string &, const std::vector<std::string>&, unsigned );
     private:
 #if BOOST_WORKAROUND(BOOST_MSVC, BOOST_TESTED_AT(1800))
         // prevent warning C4512: assignment operator could not be generated

@@ -4,8 +4,32 @@
 # https://www.boost.org/LICENSE_1_0.txt
 
 cmake_minimum_required(VERSION 3.8...3.20)
+set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 project(boost_program_options VERSION "${BOOST_SUPERPROJECT_VERSION}" LANGUAGES CXX)
+
+set(HEADERS
+    include/boost/program_options.hpp
+    include/boost/program_options/detail/cmdline.hpp
+    include/boost/program_options/detail/config_file.hpp
+    include/boost/program_options/detail/convert.hpp
+    include/boost/program_options/detail/parsers.hpp
+    include/boost/program_options/detail/utf8_codecvt_facet.hpp
+    include/boost/program_options/detail/value_semantic.hpp
+    include/boost/program_options/cmdline.hpp
+    include/boost/program_options/config.hpp
+    include/boost/program_options/environment_iterator.hpp
+    include/boost/program_options/eof_iterator.hpp
+    include/boost/program_options/errors.hpp
+    include/boost/program_options/option.hpp
+    include/boost/program_options/options_description.hpp
+    include/boost/program_options/parsers.hpp
+    include/boost/program_options/positional_options.hpp
+    include/boost/program_options/value_semantic.hpp
+    include/boost/program_options/variables_map.hpp
+    include/boost/program_options/version.hpp
+)
+source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/include/boost/ PREFIX "Header Files" FILES ${HEADERS})
 
 add_library(boost_program_options
   src/cmdline.cpp
@@ -19,6 +43,7 @@ add_library(boost_program_options
   src/value_semantic.cpp
   src/variables_map.cpp
   src/winmain.cpp
+  ${HEADERS}
 )
 
 add_library(Boost::program_options ALIAS boost_program_options)
@@ -43,12 +68,13 @@ target_link_libraries(boost_program_options
     Boost::tokenizer
 )
 
-target_compile_features(boost_program_options PUBLIC cxx_std_11)
+target_compile_features(boost_program_options PUBLIC cxx_std_17)
 
 target_compile_definitions(boost_program_options
   PUBLIC BOOST_PROGRAM_OPTIONS_NO_LIB
   PRIVATE BOOST_PROGRAM_OPTIONS_SOURCE
 )
+
 
 if(BUILD_SHARED_LIBS)
   target_compile_definitions(boost_program_options PUBLIC BOOST_PROGRAM_OPTIONS_DYN_LINK)

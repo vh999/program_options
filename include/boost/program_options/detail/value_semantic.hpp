@@ -14,22 +14,34 @@ namespace boost { template<class T> class optional; }
 namespace boost { namespace program_options { 
 
     extern BOOST_PROGRAM_OPTIONS_DECL std::string arg;
-    
+
     template<class T, class charT>
     std::string
     typed_value<T, charT>::name() const
     {
         std::string const& var = (m_value_name.empty() ? arg : m_value_name);
-        if (!m_implicit_value.empty() && !m_implicit_value_as_text.empty()) {
-            std::string msg = "[=" + var + "(=" + m_implicit_value_as_text + ")]";
-            if (!m_default_value.empty() && !m_default_value_as_text.empty())
-                msg += " (=" + m_default_value_as_text + ")";
-            return msg;
+        std::string msg;
+
+        if (m_implicit_value.empty())
+            msg = var;
+        else 
+        {
+            if (m_implicit_value_as_text.empty())
+                msg = "[" + var + "]";
+            else
+                msg = "[" + var + "(" + m_implicit_value_as_text + ")]";
         }
-        else if (!m_default_value.empty() && !m_default_value_as_text.empty()) {
-            return var + " (=" + m_default_value_as_text + ")";
-        } else {
-            return var;
+
+        if (m_default_value.empty())
+            return msg;
+        else
+        {
+            if(m_default_value_as_text.empty())
+                return msg;
+            else
+            {
+                return msg + " (" + m_default_value_as_text + ")";
+            } 
         }
     }
 
@@ -46,7 +58,27 @@ namespace boost { namespace program_options {
         }
     }
 
-    namespace validators {
+    template<class T, class charT>
+    std::string 
+    typed_value<T, charT>::text(const boost::any& value_store) const
+    {
+        const T* value = boost::any_cast<T>(&value_store);
+
+        if(m_formatter)
+            return m_formatter(*value);
+        else
+            return string();
+        
+        /*
+        stringstream ss;
+
+        ss << *value;
+
+        return ss.str();
+        */
+    }
+
+   namespace validators {
         /* If v.size() > 1, throw validation_error. 
            If v.size() == 1, return v.front()
            Otherwise, returns a reference to a statically allocated
@@ -73,6 +105,9 @@ namespace boost { namespace program_options {
     }
 
     using namespace validators;
+
+
+
 
     /** Validates 's' and updates 'v'.
         @pre 'v' is either empty or in the state assigned by the previous

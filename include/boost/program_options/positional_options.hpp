@@ -10,6 +10,7 @@
 
 #include <vector>
 #include <string>
+#include <iostream>
 
 #if defined(BOOST_MSVC)
 #   pragma warning (push)
@@ -37,6 +38,8 @@ namespace boost { namespace program_options {
     public:
         positional_options_description();
 
+        positional_options_description(const options_description &);
+
         /** Species that up to 'max_count' next positional options
             should be given the 'name'. The value of '-1' means 'unlimited'. 
             No calls to 'add' can be made after call with 'max_value' equal to 
@@ -55,6 +58,11 @@ namespace boost { namespace program_options {
             Precondition: position < max_total_count()
         */
         const std::string& name_for_position(unsigned position) const;
+
+		bool is_positional(const std::string &name) const
+		{
+			return std::find(m_names.begin(),m_names.end(),name)!=m_names.end();
+		}
 
     private:
         // List of names corresponding to the positions. If the number of

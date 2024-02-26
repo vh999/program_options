@@ -13,6 +13,7 @@
 #include <stdexcept>
 #include <vector>
 #include <map>
+#include <iostream>
 
 
 #if defined(BOOST_MSVC)
@@ -123,24 +124,24 @@ namespace boost { namespace program_options {
          *  */ 
         BOOST_DEFAULTED_FUNCTION(~error_with_option_name() throw(), {})
 
-
-        //void dump() const
-        //{
-        //  std::cerr << "m_substitution_defaults:\n";
-        //  for (std::map<std::string, string_pair>::const_iterator iter = m_substitution_defaults.begin();
-        //        iter != m_substitution_defaults.end(); ++iter)
-        //      std::cerr << "\t" << iter->first << ":" << iter->second.first << "=" << iter->second.second << "\n";
-        //  std::cerr << "m_substitutions:\n";
-        //  for (std::map<std::string, std::string>::const_iterator iter = m_substitutions.begin();
-        //        iter != m_substitutions.end(); ++iter)
-        //      std::cerr << "\t" << iter->first << "=" << iter->second << "\n";
-        //  std::cerr << "m_error_template:\n";
-        //  std::cerr << "\t" << m_error_template << "\n";
-        //  std::cerr << "canonical_option_prefix:[" << get_canonical_option_prefix() << "]\n";
-        //  std::cerr << "canonical_option_name:[" << get_canonical_option_name() <<"]\n";
-        //  std::cerr << "what:[" << what() << "]\n";
-        //}
-
+        #ifdef _DEBUG 
+        void dump() const
+        {
+          std::cerr << "m_substitution_defaults:\n";
+          for (std::map<std::string, string_pair>::const_iterator iter = m_substitution_defaults.begin();
+                iter != m_substitution_defaults.end(); ++iter)
+              std::cerr << "\t" << iter->first << ":" << iter->second.first << "=" << iter->second.second << "\n";
+          std::cerr << "m_substitutions:\n";
+          for (std::map<std::string, std::string>::const_iterator iter = m_substitutions.begin();
+                iter != m_substitutions.end(); ++iter)
+              std::cerr << "\t" << iter->first << "=" << iter->second << "\n";
+          std::cerr << "m_error_template:\n";
+          std::cerr << "\t" << m_error_template << "\n";
+          std::cerr << "canonical_option_prefix:[" << get_canonical_option_prefix() << "]\n";
+          std::cerr << "canonical_option_name:[" << get_canonical_option_name() <<"]\n";
+          std::cerr << "what:[" << what() << "]\n";
+        }
+        #endif
         /** Substitute
          *      parameter_name->value to create the error message from
          *      the error template */
@@ -207,7 +208,7 @@ namespace boost { namespace program_options {
     class BOOST_PROGRAM_OPTIONS_DECL BOOST_SYMBOL_VISIBLE multiple_values : public error_with_option_name {
     public:
         multiple_values() 
-         : error_with_option_name("option '%canonical_option%' only takes a single argument"){}
+         : error_with_option_name("option '%original_token%' only takes a single argument"){}
 
         BOOST_DEFAULTED_FUNCTION(~multiple_values() throw(), {})
     };
@@ -218,7 +219,7 @@ namespace boost { namespace program_options {
     class BOOST_PROGRAM_OPTIONS_DECL BOOST_SYMBOL_VISIBLE multiple_occurrences : public error_with_option_name {
     public:
         multiple_occurrences() 
-         : error_with_option_name("option '%canonical_option%' cannot be specified more than once"){}
+         : error_with_option_name("option '%original_token%' cannot be specified more than once"){}
 
         BOOST_DEFAULTED_FUNCTION(~multiple_occurrences() throw(), {})
 
@@ -229,7 +230,7 @@ namespace boost { namespace program_options {
     public:
        // option name is constructed by the option_descriptor and never on the fly
        required_option(const std::string& option_name)
-       : error_with_option_name("the option '%canonical_option%' is required but missing", "", option_name)
+       : error_with_option_name("the option '%original_token%' is required but missing", "", option_name)
        {
        }
 
@@ -266,7 +267,7 @@ namespace boost { namespace program_options {
     class BOOST_PROGRAM_OPTIONS_DECL BOOST_SYMBOL_VISIBLE unknown_option : public error_with_no_option_name {
     public:
         unknown_option(const std::string& original_token = "")
-        : error_with_no_option_name("unrecognised option '%canonical_option%'", original_token)
+        : error_with_no_option_name("unrecognised option '%original_token%'", original_token)
         {
         }
 
@@ -279,7 +280,7 @@ namespace boost { namespace program_options {
     class BOOST_PROGRAM_OPTIONS_DECL BOOST_SYMBOL_VISIBLE ambiguous_option : public error_with_no_option_name {
     public:
         ambiguous_option(const std::vector<std::string>& xalternatives)
-        : error_with_no_option_name("option '%canonical_option%' is ambiguous"),
+        : error_with_no_option_name("option '%original_token%' is ambiguous"),
             m_alternatives(xalternatives)
         {}
 
@@ -365,6 +366,7 @@ namespace boost { namespace program_options {
         enum kind_t {
             multiple_values_not_allowed = 30,
             at_least_one_value_required, 
+            no_value_required,
             invalid_bool_value,
             invalid_option_value,
             invalid_option

@@ -11,12 +11,22 @@
 
 #include <boost/any.hpp>
 #include <boost/function/function1.hpp>
-#include <boost/lexical_cast.hpp>
+#include <boost/lexical_cast.hpp> 
+#include <boost/optional.hpp>
 
 #include <string>
 #include <vector>
 #include <typeinfo>
 #include <limits>
+
+#ifdef BOOST_LCAST_NO_COMPILE_TIME_PRECISION
+#    error unsupported
+#endif
+
+/** The following template specialization is intended to limit the
+ *  precision in lexical conversion.
+*/
+template <> struct boost::detail::lcast_precision<double> : std::integral_constant<unsigned, 5> { };
 
 namespace boost { namespace program_options {
 
@@ -68,6 +78,8 @@ namespace boost { namespace program_options {
         */
         virtual void notify(const boost::any& value_store) const = 0;
         
+        virtual std::string text(const boost::any& value_store) const = 0;
+
         virtual ~value_semantic() {}
     };
 
@@ -152,6 +164,7 @@ namespace boost { namespace program_options {
 
         /** Does nothing. */
         void notify(const boost::any&) const {}        
+        std::string text(const boost::any &value_store) const{return std::string();};
     private:
         bool m_zero_tokens;
     };
@@ -203,7 +216,13 @@ namespace boost { namespace program_options {
             return this;
         }
 
-        /** Specifies default value, which will be used
+        typed_value* default_value(void)
+        {
+            m_default_value = boost::any(T());
+            return this;
+        }
+
+       /** Specifies default value, which will be used
             if none is explicitly specified. Unlike the above overload,
             the type 'T' need not provide operator<< for ostream,
             but textual representation of default value must be provided
@@ -213,6 +232,12 @@ namespace boost { namespace program_options {
         {
             m_default_value = boost::any(v);
             m_default_value_as_text = textual;
+            return this;
+        }
+
+        typed_value* implicit_value(void)
+        {
+            m_implicit_value = boost::any(T());
             return this;
         }
 
@@ -251,7 +276,7 @@ namespace boost { namespace program_options {
             m_implicit_value_as_text = textual;
             return this;
         }
-
+        
         /** Specifies a function to be called when the final value
             is determined. */
         typed_value* notifier(function1<void, const T&> f)
@@ -260,7 +285,16 @@ namespace boost { namespace program_options {
             return this;
         }
 
-        /** Specifies that the value is composing. See the 'is_composing' 
+        /** Specifies a function to be called to format the
+         *  value into a text string.
+        */
+        typed_value* formatter(function1<std::string, const T&> f)
+        {
+            m_formatter = f;
+            return this;
+        }
+
+       /** Specifies that the value is composing. See the 'is_composing' 
             method for explanation. 
         */
         typed_value* composing()
@@ -349,6 +383,7 @@ namespace boost { namespace program_options {
             does nothing. */
         void notify(const boost::any& value_store) const;
 
+        std::string text(const boost::any &value_store) const;
     public: // typed_value_base overrides
         
 #ifndef BOOST_NO_RTTI
@@ -371,6 +406,7 @@ namespace boost { namespace program_options {
         std::string m_implicit_value_as_text;
         bool m_composing, m_implicit, m_multitoken, m_zero_tokens, m_required;
         boost::function1<void, const T&> m_notifier;
+        boost::function1<std::string, const T&> m_formatter;
     };
 
 

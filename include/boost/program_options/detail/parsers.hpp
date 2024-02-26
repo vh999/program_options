@@ -7,6 +7,7 @@
 #define BOOST_PARSERS_HPP_VP_2004_05_06
 
 #include <boost/program_options/detail/convert.hpp>
+#include <boost/program_options/option.hpp>
 
 #include <iterator>
 
@@ -80,7 +81,6 @@ namespace boost { namespace program_options {
     }
 
 
-
     template<class charT>    
     basic_parsed_options<charT>
     basic_command_line_parser<charT>::run()
@@ -89,8 +89,27 @@ namespace boost { namespace program_options {
         //    eventually inside the parsed results
         //    This will be handy to format recognisable options
         //    for diagnostic messages if everything blows up much later on
+        std::vector<boost::program_options::option>options;
+
         parsed_options result(m_desc, detail::cmdline::get_canonical_option_prefix());
-        result.options = detail::cmdline::run();
+        result.options = detail::cmdline::run(options);
+
+        // Presense of parsed_options -> wparsed_options conversion
+        // does the trick.
+        return basic_parsed_options<charT>(result);
+    }
+
+
+    template<class charT>    
+    basic_parsed_options<charT>
+    basic_command_line_parser<charT>::run(const std::vector<boost::program_options::option>& options)
+    {
+        // save the canonical prefixes which were used by this cmdline parser
+        //    eventually inside the parsed results
+        //    This will be handy to format recognisable options
+        //    for diagnostic messages if everything blows up much later on
+        parsed_options result(m_desc, detail::cmdline::get_canonical_option_prefix());
+        result.options = detail::cmdline::run(options);
 
         // Presense of parsed_options -> wparsed_options conversion
         // does the trick.
