@@ -232,7 +232,7 @@ namespace boost { namespace program_options {
             map<string, variable_value>::const_iterator iter = find(opt);
             if (iter == end() || iter->second.empty())
             {
-                boost::throw_exception(required_option(display_opt));
+                boost::throw_exception(required_option(opt,display_opt));
 
             }
         }

@@ -41,7 +41,6 @@ namespace boost { namespace program_options {
         error(const std::string& xwhat) : std::logic_error(xwhat) {}
     };
 
-
     /** Class thrown when there are too many positional options. 
         This is a programming error.
     */
@@ -229,8 +228,8 @@ namespace boost { namespace program_options {
     class BOOST_PROGRAM_OPTIONS_DECL BOOST_SYMBOL_VISIBLE required_option : public error_with_option_name {
     public:
        // option name is constructed by the option_descriptor and never on the fly
-       required_option(const std::string& option_name)
-       : error_with_option_name("the option '%original_token%' is required but missing", "", option_name)
+       required_option(const std::string& option_name, const std::string& original_option_name)
+       : error_with_option_name("the option '%original_token%' is required but missing", option_name, original_option_name)
        {
        }
 

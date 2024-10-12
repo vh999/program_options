@@ -384,7 +384,7 @@ namespace boost { namespace program_options {
          option_description* d = find_nothrow(name, approx, 
                                        long_ignore_case, short_ignore_case);
         if (!d)
-            boost::throw_exception(unknown_option());
+            boost::throw_exception(unknown_option(name));
         return *d;
     }
 

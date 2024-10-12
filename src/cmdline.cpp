@@ -51,7 +51,7 @@ namespace boost { namespace program_options {
             msg = "the argument for option '%canonical_option%' should follow immediately after the equal sign";
             break;
         case missing_parameter:
-            msg = "the required argument for option '%canonical_option%' is missing";
+            msg = "the required argument for option '%original_token%' is missing";
             break;
         case unrecognized_line:
             msg = "the options configuration file contains an invalid line '%invalid_line%'";
